@@ -1,0 +1,14 @@
+{{ payload.title ?? 'Welcome to ' ~ app_name|default('Your App') }}
+
+{% if payload.nickname is defined and payload.nickname %}
+Hi @{{ payload.nickname }}, your registration code is {{ payload.activation_code }}
+{% endif %}
+
+{{ payload.message ?? "Thanks for registering." }}
+
+{% if payload.cta_url is defined and payload.cta_url %}
+Open: {{ payload.cta_url }}
+{% endif %}
+
+--
+{{ app_name|default('Your App') }}

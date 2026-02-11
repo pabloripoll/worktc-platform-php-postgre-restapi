@@ -1,0 +1,74 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Domain\User\Entity\User
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        # Specific firewall for test endpoints
+        api_test:
+            pattern: ^/api/v1/test
+            stateless: true
+            security: false  # No authentication at firewall level
+
+        # Admin login endpoint (must appear before other json_login/firewalls)
+        admin_login:
+            pattern: ^/api/v1/admin/auth/login
+            stateless: true
+            json_login:
+                check_path: /api/v1/admin/auth/login
+                username_path: email
+                password_path: password
+                success_handler: App\Security\CustomAuthenticationSuccessHandler    #lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                #provider: app_admin_provider   # uncomment if using a separate provider
+
+        # Allow anonymous access to the admin refresh endpoint so the controller can handle expired tokens
+        refresh_admin:
+            pattern: ^/api/v1/admin/auth/refresh$
+            security: false     # disable security for this route — no JWT authenticator will run
+
+        # Member login endpoint
+        login:
+            pattern: ^/api/v1/auth/login
+            stateless: true
+            json_login:
+                check_path: /api/v1/auth/login
+                username_path: email
+                password_path: password
+                success_handler: App\Security\CustomAuthenticationSuccessHandler    #lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        # Allow anonymous access to the member refresh endpoint so the controller can handle expired tokens
+        refresh_member:
+            pattern: ^/api/v1/auth/refresh$
+            security: false
+
+        # Main API firewall: JWT applied to all /api routes
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
+            # Handlers to produce concise JSON responses for security errors
+            entry_point: App\Security\JwtAuthenticationEntryPoint
+            access_denied_handler: App\Security\ApiAccessDeniedHandler
+
+    access_control:
+        - { path: ^/api/v1/auth/(login|register|activation)$ }
+        - { path: ^/api/v1/auth/(refresh|logout|whoami)$, roles: ROLE_MEMBER }
+        - { path: ^/api/v1/account, roles: ROLE_MEMBER }
+        - { path: ^/api/v1/member, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/v1/posts, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/v1/feed, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/v1/admin/auth/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/v1/admin$, roles: ROLE_ADMIN }
+        - { path: ^/api, roles: IS_AUTHENTICATED_ANONYMOUSLY }

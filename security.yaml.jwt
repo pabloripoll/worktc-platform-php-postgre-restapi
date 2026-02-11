@@ -1,0 +1,47 @@
+
+security:
+    encoders:
+        App\Domain\User\Entity\User:
+            algorithm: auto
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Domain\User\Entity\User
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        login:
+            pattern:  ^/api/login
+            stateless: true
+            json_login:
+                check_path:               /api/login
+                username_path:            email
+                password_path:            password
+                success_handler:          lexik_jwt_authentication.handler.authentication_success
+                failure_handler:          lexik_jwt_authentication.handler.authentication_failure
+
+        api:
+            pattern:   ^/api
+            stateless: true
+            provider: app_user_provider
+            custom_authenticators:
+                - lexik_jwt_authentication.jwt_token_authenticator
+
+    access_control:
+        # Admin endpoints
+        - { path: ^/api/v1/admin, roles: ROLE_ADMIN }
+
+        # Publicly accessible member auth endpoints
+        - { path: ^/api/v1/auth/(login|register|activation)$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        # Publicly accessible member profile endpoints
+        - { path: ^/api/v1/members, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        # Protected member endpoints (require JWT and ROLE_MEMBER)
+        - { path: ^/api/v1/auth/(refresh|logout|whoami)$, roles: ROLE_MEMBER }
+        - { path: ^/api/v1/account, roles: ROLE_MEMBER }
+        # Default: authenticated (for anything else under /api)
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

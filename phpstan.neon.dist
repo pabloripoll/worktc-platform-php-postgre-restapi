@@ -1,0 +1,38 @@
+parameters:
+    # analysis strictness: start low and raise over time
+    level: 3
+
+    # paths to analyse
+    paths:
+        - src
+        - tests
+
+    excludePaths:
+        analyse:
+            - vendor
+            - var/cache
+
+    scanDirectories:
+        - src
+        - tests
+
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    tmpDir: var/phpstan
+    resultCachePath: var/phpstan/resultCache.php
+
+    parallel:
+        jobSize: 20
+        maximumNumberOfProcesses: 4
+
+    # Ignore test-specific issues
+    #ignoreErrors:
+        #- '#Property ([a-zA-Z0-9_]+) does not exist on ([a-zA-Z0-9_\\\\]+)\\.#'
+
+
+    # let phpstan-symfony boot your Kernel (uses env=test)
+    #symfony:
+    #    kernel_class: App\Kernel
+    #    env: test
+    #    debug: false

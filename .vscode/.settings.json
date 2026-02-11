@@ -1,0 +1,12 @@
+{
+    "intelephense.stubs": [
+        "Core",
+        "PDO",
+        "mongodb",
+        "amqp",
+        "redis",
+        "standard",
+        "mbstring",
+        "json"
+    ]
+}

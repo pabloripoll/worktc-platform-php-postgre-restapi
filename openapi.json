@@ -1,0 +1,380 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "My App",
+        "description": "This is an awesome app!",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/v1/admin/account/sections": {
+            "get": {
+                "operationId": "get_admin_account_sections",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/account/profile": {
+            "get": {
+                "operationId": "get_admin_account_profile_read",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "put_admin_account_profile_update",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "patch_admin_account_profile_update",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/account/avatar": {
+            "post": {
+                "operationId": "post_admin_account_avatar_upload",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "delete_admin_account_avatar_delete",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/account/posts": {
+            "get": {
+                "operationId": "get_admin_account_posts",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/account/notifications": {
+            "get": {
+                "operationId": "get_admin_account_notifications",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/account/notifications/read": {
+            "post": {
+                "operationId": "post_admin_account_notification_read",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/register": {
+            "post": {
+                "summary": "Register a new member",
+                "operationId": "post_admin_auth_register",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/activation": {
+            "post": {
+                "operationId": "post_admin_auth_activation",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/login": {
+            "post": {
+                "operationId": "post_admin_auth_login",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/refresh": {
+            "post": {
+                "operationId": "post_admin_auth_refresh",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/logout": {
+            "post": {
+                "operationId": "post_admin_auth_logout",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/auth/whoami": {
+            "get": {
+                "operationId": "get_admin_auth_whoami",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users": {
+            "get": {
+                "operationId": "get_admin_list_sections",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{user_uid}/profile": {
+            "get": {
+                "operationId": "get_admin_read_profile",
+                "parameters": [
+                    {
+                        "name": "user_uid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/account/sections": {
+            "get": {
+                "operationId": "get_member_account_sections",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/account/profile": {
+            "get": {
+                "operationId": "get_member_account_profile_read",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "put_member_account_profile_update",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "patch_member_account_profile_update",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/account/avatar": {
+            "post": {
+                "operationId": "post_member_account_avatar_upload",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "delete_member_account_avatar_delete",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/account/posts": {
+            "get": {
+                "operationId": "get_member_account_posts",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/account/notifications": {
+            "get": {
+                "operationId": "get_member_account_notifications",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/account/notifications/read": {
+            "post": {
+                "operationId": "post_member_account_notification_read",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "summary": "Register a new member",
+                "operationId": "post_member_auth_register",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/activation": {
+            "post": {
+                "operationId": "post_member_auth_activation",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "operationId": "post_member_auth_login",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "operationId": "post_member_auth_refresh",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "operationId": "post_member_auth_logout",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/whoami": {
+            "get": {
+                "operationId": "get_member_auth_whoami",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/members": {
+            "get": {
+                "operationId": "get_member_list_sections",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/members/{user_uid}/profile": {
+            "get": {
+                "operationId": "get_member_read_profile",
+                "parameters": [
+                    {
+                        "name": "user_uid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/members/{user_uid}/posts": {
+            "get": {
+                "operationId": "get_member_listing_posts",
+                "parameters": [
+                    {
+                        "name": "user_uid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+    }
+}

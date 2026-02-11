@@ -1,0 +1,231 @@
+openapi: 3.0.3
+info:
+  title: Member Authentication API
+  version: 1.0.0
+  description: Endpoints about the authenticated user
+
+tags:
+  - name: Member Authentication
+    description: Endpoints about the authenticated user
+
+paths:
+  /api/v1/auth/register:
+    post:
+      tags: [Member Authentication]
+      summary: Register a new member
+      description: Registers a new member account and returns basic profile info and the activation code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - nickname
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: yourPassword123
+                nickname:
+                  type: string
+                  example: JohnDoe
+                region_id:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: integer
+                    example: 156490
+                  email:
+                    type: string
+                    example: john@example.com
+                  nickname:
+                    type: string
+                    example: JohnDoe
+                  activation_code:
+                    type: string
+                    example: A1B2C3
+        '406':
+          description: Validation error
+
+  /api/v1/auth/activation:
+    post:
+      tags: [Member Authentication]
+      summary: Activate member account
+      description: Activates a member account using the activation code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - activation_code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                activation_code:
+                  type: string
+                  example: A1B2C3
+      responses:
+        '202':
+          description: Account successfully activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: john@example.com
+                  status:
+                    type: string
+                    example: Account activation has been activated.
+        '406':
+          description: Validation error
+
+  /api/v1/auth/login:
+    post:
+      tags: [Member Authentication]
+      summary: Member login
+      description: Authenticates a member and returns a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: yourPassword123
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGci...
+                  expires_in:
+                    type: integer
+                    example: 3600
+        '401':
+          description: Invalid credentials
+        '500':
+          description: Could not create token
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [Member Authentication]
+      summary: Refresh JWT token
+      description: Refreshes the JWT token for the authenticated user.
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '202':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGci...
+                  token_expired:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGci...
+                  expires_in:
+                    type: integer
+                    example: 3600
+        '404':
+          description: Token not registered
+        '422':
+          description: Token cannot be refreshed
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Member Authentication]
+      summary: Logout member
+      description: Terminates the current JWT token and logs out the member.
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '202':
+          description: Token terminated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token_expired:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGci...
+        '404':
+          description: Token not registered
+        '304':
+          description: Token is already terminated
+
+  /api/v1/auth/whoami:
+    get:
+      tags: [Member Authentication]
+      summary: Get authenticated user info
+      description: Returns information about the authenticated user.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: john@example.com
+                  uid:
+                    type: integer
+                    example: 156490
+                  nickname:
+                    type: string
+                    example: JohnDoe
+                  avatar:
+                    type: string
+                    example: http://...
+        '401':
+          description: Unauthenticated
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
