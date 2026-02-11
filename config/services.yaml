@@ -16,6 +16,10 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/Domain/*/Entity/'
+            - '../src/Domain/*/ValueObject/'
+            - '../src/Kernel.php'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
@@ -45,3 +49,27 @@ services:
         arguments:
             $mongodbUrl: '%env(MONGODB_URL)%'
             $mongodbDatabase: '%env(MONGODB_DATABASE)%'
+
+    # Bind Domain Repository Interfaces to Infrastructure Implementations
+
+    # User Domain
+    App\Domain\User\Repository\UserRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Repository\UserRepository
+
+    # Admin Domain
+    App\Domain\Admin\Repository\AdminProfileRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Repository\AdminProfileRepository
+
+    App\Domain\Admin\Repository\AdminAccessLogRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Repository\AdminAccessLogRepository
+
+    # Member Domain
+    App\Domain\Member\Repository\MemberProfileRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Repository\MemberProfileRepository
+
+    App\Domain\Member\Repository\MemberAccessLogRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Repository\MemberAccessLogRepository
+
+    # WorkEntry Domain
+    App\Domain\WorkEntry\Repository\WorkEntryRepositoryInterface:
+        class: App\Infrastructure\Persistence\Doctrine\Repository\WorkEntryRepository
