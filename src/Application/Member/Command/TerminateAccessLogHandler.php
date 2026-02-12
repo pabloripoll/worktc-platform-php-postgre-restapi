@@ -18,7 +18,7 @@ final readonly class TerminateAccessLogHandler
     {
         $accessLog = $this->accessLogRepository->findById($command->accessLogId);
 
-        if (!$accessLog) {
+        if ($accessLog === null) {
             throw new EntityNotFoundException('Access log not found');
         }
 

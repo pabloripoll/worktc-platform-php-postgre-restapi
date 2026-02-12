@@ -19,7 +19,7 @@ final readonly class GetMemberAccessLogByIdHandler
     {
         $accessLog = $this->accessLogRepository->findById($query->accessLogId);
 
-        if (!$accessLog) {
+        if ($accessLog === null) {
             throw new EntityNotFoundException('Access log not found');
         }
 

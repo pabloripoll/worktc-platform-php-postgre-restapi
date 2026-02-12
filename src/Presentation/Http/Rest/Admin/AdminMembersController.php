@@ -174,7 +174,7 @@ class AdminMembersController extends AbstractController
             $userId = Uuid::fromString($id);
             $user = $userRepository->findById($userId);
 
-            if (!$user) {
+            if ($user === null) {
                 return $this->json([
                     'error' => 'User not found'
                 ], Response::HTTP_NOT_FOUND);

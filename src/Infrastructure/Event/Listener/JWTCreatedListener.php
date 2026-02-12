@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Event\Listener;
 
+use App\Domain\User\ValueObject\UserRole;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTCreatedEvent;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -25,17 +26,17 @@ class JWTCreatedListener
 
         $payload['user_id'] = $user->getId();
 
-        if ($role == 'ROLE_ADMIN') {
+        if ($role === UserRole::ADMIN) {
             $payload['is_admin'] = true;
         }
 
-        if ($role == 'ROLE_MEMBER') {
+        if ($role === UserRole::MEMBER) {
             $payload['is_member'] = true;
         }
 
         // Optionally include request info (ip, etc.)
         $request = $this->requestStack->getCurrentRequest();
-        if ($request) {
+        if ($request !== null) {
             $payload['ip'] = $request->getClientIp();
         }
 

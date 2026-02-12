@@ -25,7 +25,7 @@ class RedisService
     {
         try {
             $response = $this->redis->ping();
-            return $response === 'PONG' || (is_array($response) && in_array('PONG', $response));
+            return $response === 'PONG' || (is_array($response) && in_array('PONG', $response, true));
         } catch (\Exception $e) {
             $this->logger->error('Redis ping failed: ' . $e->getMessage());
             return false;

@@ -22,9 +22,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Domain\User\ValueObject\UserRole;
 
 #[Route('/api/v1/admin/users')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted(UserRole::ADMIN)]
 class AdminUsersController extends AbstractController
 {
     #[Route('', name: 'admin_users_create', methods: ['POST'])]
@@ -64,7 +65,7 @@ class AdminUsersController extends AbstractController
         try {
             $pagination = PaginationDTO::fromRequest($request->query->all());
 
-            $query = new GetAllUsersQuery('ROLE_ADMIN', $pagination);
+            $query = new GetAllUsersQuery(UserRole::ADMIN, $pagination);
             $result = $handler($query);
 
             return $this->json($result->toArray());
@@ -97,7 +98,7 @@ class AdminUsersController extends AbstractController
             $userId = Uuid::fromString($id);
             $user = $userRepository->findById($userId);
 
-            if (!$user) {
+            if ($user === null) {
                 return $this->json(['error' => 'User not found'], JsonResponse::HTTP_NOT_FOUND);
             }
 

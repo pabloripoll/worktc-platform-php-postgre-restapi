@@ -29,7 +29,7 @@ class MongoDBService
     {
         try {
             $result = $this->database->command(['ping' => 1]);
-            return isset($result['ok']) && $result['ok'] == 1;
+            return isset($result['ok']) && $result['ok'] === 1;
         } catch (\Exception $e) {
             $this->logger->error('MongoDB ping failed: ' . $e->getMessage());
             return false;

@@ -19,7 +19,7 @@ final readonly class GetAdminAccessLogByTokenHandler
     {
         $accessLog = $this->accessLogRepository->findByToken($query->token);
 
-        if (!$accessLog) {
+        if ($accessLog === null) {
             throw new EntityNotFoundException('Access log not found');
         }
 

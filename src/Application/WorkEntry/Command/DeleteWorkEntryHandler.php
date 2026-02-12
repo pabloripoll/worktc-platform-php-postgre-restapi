@@ -20,7 +20,7 @@ final readonly class DeleteWorkEntryHandler
         $workEntryId = Uuid::fromString($command->workEntryId);
         $workEntry = $this->workEntryRepository->findById($workEntryId);
 
-        if (!$workEntry) {
+        if ($workEntry === null) {
             throw new EntityNotFoundException('Work entry not found');
         }
 

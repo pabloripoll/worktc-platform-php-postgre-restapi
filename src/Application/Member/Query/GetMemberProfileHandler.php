@@ -22,13 +22,13 @@ final readonly class GetMemberProfileHandler
         $userId = Uuid::fromString($query->userId);
         $user = $this->userRepository->findById($userId);
 
-        if (!$user) {
+        if ($user === null) {
             throw new EntityNotFoundException('User not found');
         }
 
         $profile = $this->profileRepository->findByUserId($userId);
 
-        if (!$profile) {
+        if ($profile === null) {
             throw new EntityNotFoundException('Member profile not found');
         }
 

@@ -20,7 +20,7 @@ final readonly class UpdateWorkEntryHandler
         $workEntryId = Uuid::fromString($command->workEntryId);
         $workEntry = $this->workEntryRepository->findById($workEntryId);
 
-        if (!$workEntry) {
+        if ($workEntry === null) {
             throw new EntityNotFoundException('Work entry not found');
         }
 
@@ -34,7 +34,7 @@ final readonly class UpdateWorkEntryHandler
         }
 
         // Update end date if provided
-        if ($command->endDate && !$workEntry->getEndDate()) {
+        if ($command->endDate !== null && $workEntry->getEndDate() === null) {
             $endDate = new \DateTimeImmutable($command->endDate);
             $updatedByUserId = $command->updatedByUserId
                 ? Uuid::fromString($command->updatedByUserId)

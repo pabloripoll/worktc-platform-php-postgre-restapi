@@ -21,7 +21,7 @@ final readonly class GetWorkEntryByIdHandler
         $workEntryId = Uuid::fromString($query->workEntryId);
         $workEntry = $this->workEntryRepository->findById($workEntryId);
 
-        if (!$workEntry) {
+        if ($workEntry === null) {
             throw new EntityNotFoundException('Work entry not found');
         }
 

@@ -125,6 +125,7 @@ final class UserRepository implements UserRepositoryInterface
             ->andWhere('u.deletedAt IS NULL')
             ->setParameter('role', $role->value)
             ->orderBy('u.createdAt', 'DESC')
+            ->addOrderBy('u.id', 'DESC')  // Secondary sort ensures deterministic order
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery()

@@ -21,7 +21,7 @@ final readonly class UpdateMemberProfileHandler
         $userId = Uuid::fromString($command->userId);
         $user = $this->userRepository->findById($userId);
 
-        if (!$user) {
+        if ($user === null) {
             throw new DomainException('User not found');
         }
 

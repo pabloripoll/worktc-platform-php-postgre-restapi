@@ -35,7 +35,7 @@ class UserAuthController extends AbstractController
     {
         try {
             $token = str_replace('Bearer ', '', $request->headers->get('Authorization', ''));
-            if (!$token) {
+            if ($token === null) {
                 return $this->json(['message' => 'Token not provided', 'error' => 'token_not_provided'], JsonResponse::HTTP_UNAUTHORIZED);
             }
 
@@ -44,7 +44,7 @@ class UserAuthController extends AbstractController
                 ? $this->adminAccessLogRepo->findByToken($token)
                 : $this->memberAccessLogRepo->findByToken($token);
 
-            if (!$accessLog) {
+            if ($accessLog === null) {
                 return $this->json(['message' => 'Token not registered', 'error' => 'token_not_found'], JsonResponse::HTTP_NOT_FOUND);
             }
 
@@ -81,7 +81,7 @@ class UserAuthController extends AbstractController
     {
         try {
             $token = str_replace('Bearer ', '', $request->headers->get('Authorization', ''));
-            if (!$token) {
+            if ($token === null) {
                 return $this->json(['message' => 'Token not provided'], JsonResponse::HTTP_UNAUTHORIZED);
             }
 
@@ -89,7 +89,7 @@ class UserAuthController extends AbstractController
                 ? $this->adminAccessLogRepo->findByToken($token)
                 : $this->memberAccessLogRepo->findByToken($token);
 
-            if (!$accessLog) {
+            if ($accessLog === null) {
                 return $this->json(['message' => 'Token not found'], JsonResponse::HTTP_NOT_FOUND);
             }
 
@@ -119,7 +119,7 @@ class UserAuthController extends AbstractController
     ): JsonResponse {
         try {
             $query = new GetUserByIdQuery((string)$user->getId());
-            $userDTO = $handler($query);
+            $userDTO = (object) $handler($query);
 
             return $this->json([
                 'id' => $userDTO->id,

@@ -17,7 +17,7 @@ final readonly class IncrementAccessLogRequestCountHandler
     {
         $accessLog = $this->accessLogRepository->findByToken($command->token);
 
-        if (!$accessLog) {
+        if ($accessLog === null) {
             throw new EntityNotFoundException('Access log not found');
         }
 
