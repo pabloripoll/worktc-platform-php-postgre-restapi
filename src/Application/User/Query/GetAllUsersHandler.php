@@ -21,17 +21,16 @@ final readonly class GetAllUsersHandler
 
     public function __invoke(GetAllUsersQuery $query): PaginatedResultDTO
     {
-        $role = UserRole::from($query->role);
+        $role = $query->role;
 
-        // Get paginated users
-        $users = $this->userRepository->findByRolePaginated(
+        $result = $this->userRepository->findByRolePaginated(
             $role,
-            $query->pagination->limit,
-            $query->pagination->getOffset()
+            $query->pagination->page,  // page number
+            $query->pagination->limit  // items per page
         );
 
-        // Get total count
-        $total = $this->userRepository->countByRole($role);
+        $users = $result['data'];
+        $total = $result['total'];
 
         // Map to DTOs
         $userDTOs = array_map(function($user) use ($role) {

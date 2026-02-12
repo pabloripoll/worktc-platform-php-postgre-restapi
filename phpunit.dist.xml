@@ -41,6 +41,9 @@
 
     <!-- Enable DAMA Doctrine Test Bundle -->
     <extensions>
-        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
+        <!-- Keep DAMA but with static connection -->
+        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension">
+            <parameter name="connection" value="default"/>
+        </bootstrap>
     </extensions>
 </phpunit>

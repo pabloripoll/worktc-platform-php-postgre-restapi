@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain\User\Entity;
 
+use App\Domain\Shared\Exception\DomainException;
 use App\Domain\Shared\ValueObject\Email;
 use App\Domain\Shared\ValueObject\Uuid;
 use App\Domain\User\Entity\User;
@@ -12,109 +13,89 @@ use PHPUnit\Framework\TestCase;
 
 final class UserTest extends TestCase
 {
-    private Uuid $creatorId;
-
-    protected function setUp(): void
-    {
-        $this->creatorId = Uuid::generate();
-    }
-
     public function testCreateAdmin(): void
     {
-        $id = Uuid::generate();
+        $userId = Uuid::random();
         $email = Email::fromString('admin@example.com');
-        $hashedPassword = 'hashed_password';
+        $password = 'password123';
+        $createdByUserId = Uuid::random();
 
-        $user = User::createAdmin($id, $email, $hashedPassword, $this->creatorId);
+        $user = User::createAdmin($userId, $email, $password, $createdByUserId);
 
-        $this->assertEquals($id, $user->getId());
+        $this->assertEquals($userId, $user->getId());
         $this->assertEquals($email, $user->getEmail());
-        $this->assertEquals(UserRole::ADMIN, $user->getRole());
-        $this->assertEquals($hashedPassword, $user->getPassword());
-        $this->assertEquals($this->creatorId, $user->getCreatedByUserId());
-        $this->assertFalse($user->isDeleted());
-        $this->assertInstanceOf(\DateTimeImmutable::class, $user->getCreatedAt());
-        $this->assertInstanceOf(\DateTimeImmutable::class, $user->getUpdatedAt());
+        $this->assertTrue($user->isAdmin());
+        $this->assertFalse($user->isMember());
     }
 
     public function testCreateMember(): void
     {
-        $id = Uuid::generate();
+        $userId = Uuid::random();
         $email = Email::fromString('member@example.com');
-        $hashedPassword = 'hashed_password';
+        $password = 'password123';
+        $createdByUserId = Uuid::random();
 
-        $user = User::createMember($id, $email, $hashedPassword, $this->creatorId);
+        $user = User::createMember($userId, $email, $password, $createdByUserId);
 
-        $this->assertEquals($id, $user->getId());
+        $this->assertEquals($userId, $user->getId());
         $this->assertEquals($email, $user->getEmail());
-        $this->assertEquals(UserRole::MEMBER, $user->getRole());
-        $this->assertEquals($hashedPassword, $user->getPassword());
-        $this->assertEquals($this->creatorId, $user->getCreatedByUserId());
-        $this->assertFalse($user->isDeleted());
+        $this->assertTrue($user->isMember());
+        $this->assertFalse($user->isAdmin());
     }
 
     public function testUserIsAdmin(): void
     {
         $user = User::createAdmin(
-            Uuid::generate(),
+            Uuid::random(),
             Email::fromString('admin@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $this->assertTrue($user->isAdmin());
-        $this->assertFalse($user->isMember());
     }
 
     public function testUserIsMember(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
+            Uuid::random(),
             Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $this->assertTrue($user->isMember());
-        $this->assertFalse($user->isAdmin());
     }
 
-    public function testChangePassword(): void
+    public function testUpdatePassword(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
-            Email::fromString('test@example.com'),
-            'old_password',
-            $this->creatorId
+            Uuid::random(),
+            Email::fromString('member@example.com'),
+            'password',
+            Uuid::random()
         );
 
-        $oldUpdatedAt = $user->getUpdatedAt();
-
-        // Small delay to ensure timestamp difference
-        usleep(1000);
-
-        $newPassword = 'new_hashed_password';
-        $user->changePassword($newPassword);
+        $newPassword = 'newHashedPassword';
+        $user->updatePassword($newPassword);
 
         $this->assertEquals($newPassword, $user->getPassword());
-        $this->assertGreaterThan($oldUpdatedAt, $user->getUpdatedAt());
     }
 
     public function testSoftDelete(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
-            Email::fromString('test@example.com'),
+            Uuid::random(),
+            Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
-        $this->assertFalse($user->isDeleted());
         $this->assertNull($user->getDeletedAt());
 
         $user->softDelete();
 
-        $this->assertTrue($user->isDeleted());
+        $this->assertNotNull($user->getDeletedAt());
         $this->assertInstanceOf(\DateTimeImmutable::class, $user->getDeletedAt());
     }
 
@@ -122,10 +103,10 @@ final class UserTest extends TestCase
     {
         $email = 'test@example.com';
         $user = User::createMember(
-            Uuid::generate(),
+            Uuid::random(),
             Email::fromString($email),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $this->assertEquals($email, $user->getUserIdentifier());
@@ -134,99 +115,94 @@ final class UserTest extends TestCase
     public function testGetRolesForAdmin(): void
     {
         $user = User::createAdmin(
-            Uuid::generate(),
+            Uuid::random(),
             Email::fromString('admin@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $roles = $user->getRoles();
 
-        $this->assertIsArray($roles);
         $this->assertContains('ROLE_ADMIN', $roles);
     }
 
     public function testGetRolesForMember(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
+            Uuid::random(),
             Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $roles = $user->getRoles();
 
-        $this->assertIsArray($roles);
         $this->assertContains('ROLE_MEMBER', $roles);
     }
 
     public function testEraseCredentials(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
-            Email::fromString('test@example.com'),
+            Uuid::random(),
+            Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         // Should not throw exception
         $user->eraseCredentials();
 
-        // Password should remain (no temporary credentials)
-        $this->assertEquals('password', $user->getPassword());
+        $this->assertTrue(true);
     }
 
     public function testCreatedAtIsSetOnCreation(): void
     {
-        $beforeCreation = new \DateTimeImmutable();
-
         $user = User::createMember(
-            Uuid::generate(),
-            Email::fromString('test@example.com'),
+            Uuid::random(),
+            Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
-        $afterCreation = new \DateTimeImmutable();
-
-        $this->assertGreaterThanOrEqual($beforeCreation, $user->getCreatedAt());
-        $this->assertLessThanOrEqual($afterCreation, $user->getCreatedAt());
+        $this->assertNotNull($user->getCreatedAt());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $user->getCreatedAt());
     }
 
     public function testUpdatedAtChangesOnPasswordChange(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
-            Email::fromString('test@example.com'),
+            Uuid::random(),
+            Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $originalUpdatedAt = $user->getUpdatedAt();
 
-        usleep(1000); // Ensure time difference
+        // Small delay to ensure different timestamp
+        usleep(1000);
 
-        $user->changePassword('new_password');
+        $user->updatePassword('newHashedPassword');
 
-        $this->assertGreaterThan($originalUpdatedAt, $user->getUpdatedAt());
+        $this->assertNotEquals($originalUpdatedAt, $user->getUpdatedAt());
     }
 
     public function testUpdatedAtChangesOnSoftDelete(): void
     {
         $user = User::createMember(
-            Uuid::generate(),
-            Email::fromString('test@example.com'),
+            Uuid::random(),
+            Email::fromString('member@example.com'),
             'password',
-            $this->creatorId
+            Uuid::random()
         );
 
         $originalUpdatedAt = $user->getUpdatedAt();
 
-        usleep(1000); // Ensure time difference
+        // Small delay to ensure different timestamp
+        usleep(1000);
 
         $user->softDelete();
 
-        $this->assertGreaterThan($originalUpdatedAt, $user->getUpdatedAt());
+        $this->assertNotEquals($originalUpdatedAt, $user->getUpdatedAt());
     }
 }

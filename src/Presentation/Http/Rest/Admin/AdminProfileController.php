@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace App\Presentation\Http\Rest\Admin;
 
-use App\Application\Admin\Command\UpdateAdminNamesCommand;
-use App\Application\Admin\Command\UpdateAdminNamesHandler;
-use App\Application\Admin\Command\UpdateAdminPasswordCommand;
-use App\Application\Admin\Command\UpdateAdminPasswordHandler;
-use App\Application\Admin\Command\UpdateAdminSurnamesCommand;
-use App\Application\Admin\Command\UpdateAdminSurnamesHandler;
+use App\Application\Admin\Command\UpdateAdminProfileCommand;
+use App\Application\Admin\Command\UpdateAdminProfileHandler;
 use App\Application\Admin\Query\GetAdminProfileHandler;
 use App\Application\Admin\Query\GetAdminProfileQuery;
 use App\Domain\Shared\Exception\DomainException;
 use App\Domain\User\Entity\User;
-use App\Presentation\Request\Admin\UpdatePasswordRequest;
-use App\Presentation\Request\Admin\UpdateProfileNamesRequest;
-use App\Presentation\Request\Admin\UpdateProfileSurnamesRequest;
+use App\Presentation\Request\Admin\UpdateAdminProfileRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -38,68 +33,47 @@ class AdminProfileController extends AbstractController
 
             return $this->json($profile);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
-    #[Route('/names', name: 'admin_profile_update_names', methods: ['PATCH'])]
-    public function updateNames(
-        UpdateProfileNamesRequest $request,
+    #[Route('', name: 'admin_profile_update', methods: ['PATCH'])]
+    public function updateProfile(
+        UpdateAdminProfileRequest $request,
         #[CurrentUser] User $user,
-        UpdateAdminNamesHandler $handler
+        UpdateAdminProfileHandler $handler
     ): JsonResponse {
+        $errors = $request->validate();
+        if (!empty($errors)) {
+            return $this->json([
+                'error' => 'Validation failed',
+                'violations' => $errors
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
-            $command = new UpdateAdminNamesCommand(
+            $command = new UpdateAdminProfileCommand(
                 userId: (string)$user->getId(),
-                name: $request->name
+                name: $request->name,
+                surname: $request->surname,
+                phoneNumber: $request->phone_number,
+                department: $request->department,
+                birthDate: $request->birth_date,
+                currentPassword: $request->current_password,
+                newPassword: $request->new_password,
             );
 
             $handler($command);
 
-            return $this->json(['message' => 'Names updated successfully']);
+            return $this->json([
+                'message' => 'Profile updated successfully'
+            ]);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
-        }
-    }
-
-    #[Route('/surnames', name: 'admin_profile_update_surnames', methods: ['PATCH'])]
-    public function updateSurnames(
-        UpdateProfileSurnamesRequest $request,
-        #[CurrentUser] User $user,
-        UpdateAdminSurnamesHandler $handler
-    ): JsonResponse {
-        try {
-            $command = new UpdateAdminSurnamesCommand(
-                userId: (string)$user->getId(),
-                surname: $request->surname
-            );
-
-            $handler($command);
-
-            return $this->json(['message' => 'Surnames updated successfully']);
-        } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
-        }
-    }
-
-    #[Route('/password', name: 'admin_profile_update_password', methods: ['PATCH'])]
-    public function updatePassword(
-        UpdatePasswordRequest $request,
-        #[CurrentUser] User $user,
-        UpdateAdminPasswordHandler $handler
-    ): JsonResponse {
-        try {
-            $command = new UpdateAdminPasswordCommand(
-                userId: (string)$user->getId(),
-                currentPassword: $request->currentPassword,
-                newPassword: $request->newPassword
-            );
-
-            $handler($command);
-
-            return $this->json(['message' => 'Password updated successfully']);
-        } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 }

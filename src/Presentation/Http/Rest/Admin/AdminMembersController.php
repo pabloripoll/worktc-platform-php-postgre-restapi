@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace App\Presentation\Http\Rest\Admin;
 
-use App\Application\Member\Command\UpdateMemberNamesCommand;
-use App\Application\Member\Command\UpdateMemberNamesHandler;
-use App\Application\Member\Command\UpdateMemberPasswordCommand;
-use App\Application\Member\Command\UpdateMemberPasswordHandler;
-use App\Application\Member\Command\UpdateMemberSurnamesCommand;
-use App\Application\Member\Command\UpdateMemberSurnamesHandler;
+use App\Application\Member\Command\UpdateMemberProfileCommand;
+use App\Application\Member\Command\UpdateMemberProfileHandler;
 use App\Application\Shared\DTO\PaginationDTO;
 use App\Application\User\Command\RegisterMemberCommand;
 use App\Application\User\Command\RegisterMemberHandler;
@@ -21,10 +17,9 @@ use App\Domain\Shared\Exception\DomainException;
 use App\Domain\Shared\ValueObject\Uuid;
 use App\Domain\User\Entity\User;
 use App\Domain\User\Repository\UserRepositoryInterface;
+use App\Domain\User\ValueObject\UserRole;
 use App\Presentation\Request\Admin\CreateMemberRequest;
-use App\Presentation\Request\Admin\UpdatePasswordRequest;
-use App\Presentation\Request\Admin\UpdateProfileNamesRequest;
-use App\Presentation\Request\Admin\UpdateProfileSurnamesRequest;
+use App\Presentation\Request\Admin\UpdateMemberProfileRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,29 +34,49 @@ class AdminMembersController extends AbstractController
 {
     #[Route('', name: 'admin_members_create', methods: ['POST'])]
     public function create(
-        CreateMemberRequest $request,
+        Request $request,  // ✅ Use plain Request instead
         #[CurrentUser] User $currentUser,
         RegisterMemberHandler $handler
     ): JsonResponse {
-        // Validate request
-        $errors = $request->validate();
-        if (!empty($errors)) {
-            return $this->json([
-                'error' => 'Validation failed',
-                'violations' => $errors
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!is_array($data)) {
+                return $this->json([
+                    'error' => 'Invalid JSON'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $errors = [];
+            if (empty($data['email'])) {
+                $errors['email'] = 'Email is required';
+            }
+            if (empty($data['password'])) {
+                $errors['password'] = 'Password is required';
+            }
+            if (empty($data['name'])) {
+                $errors['name'] = 'Name is required';
+            }
+            if (empty($data['surname'])) {
+                $errors['surname'] = 'Surname is required';
+            }
+
+            if (!empty($errors)) {
+                return $this->json([
+                    'error' => 'Validation failed',
+                    'violations' => $errors
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             $command = new RegisterMemberCommand(
-                email: $request->email,
-                password: $request->password,
-                name: $request->name,
-                surname: $request->surname,
-                phoneNumber: $request->phone_number ?? null,
-                department: $request->department ?? null,
-                birthDate: $request->birth_date ?? null,
-                createdByUserId: (string)$currentUser->getId()
+                email: $data['email'],
+                password: $data['password'],
+                name: $data['name'],
+                surname: $data['surname'],
+                createdByUserId: (string)$currentUser->getId(),
+                phoneNumber: $data['phone_number'] ?? null,
+                department: $data['department'] ?? null,
+                birthDate: $data['birth_date'] ?? null,
             );
 
             $userId = $handler($command);
@@ -84,8 +99,7 @@ class AdminMembersController extends AbstractController
     ): JsonResponse {
         try {
             $pagination = PaginationDTO::fromRequest($request->query->all());
-
-            $query = new GetAllUsersQuery('ROLE_MEMBER', $pagination);
+            $query = new GetAllUsersQuery(UserRole::MEMBER, $pagination);
             $result = $handler($query);
 
             return $this->json($result->toArray());
@@ -110,6 +124,44 @@ class AdminMembersController extends AbstractController
             return $this->json([
                 'error' => $e->getMessage()
             ], Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    #[Route('/{id}/profiles', name: 'admin_members_update_profile', methods: ['PATCH'])]
+    public function updateProfile(
+        string $id,
+        Request $request,
+        UpdateMemberProfileHandler $handler
+    ): JsonResponse {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!is_array($data)) {
+                return $this->json([
+                    'error' => 'Invalid JSON'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $command = new UpdateMemberProfileCommand(
+                userId: $id,
+                name: $data['name'] ?? null,
+                surname: $data['surname'] ?? null,
+                phoneNumber: $data['phone_number'] ?? null,
+                department: $data['department'] ?? null,
+                birthDate: $data['birth_date'] ?? null,
+                currentPassword: $data['current_password'] ?? null,
+                newPassword: $data['new_password'] ?? null,
+            );
+
+            $handler($command);
+
+            return $this->json([
+                'message' => 'Member profile updated successfully'
+            ]);
+        } catch (DomainException $e) {
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -139,106 +191,6 @@ class AdminMembersController extends AbstractController
 
             return $this->json([
                 'message' => 'Member profile deleted successfully'
-            ]);
-        } catch (DomainException $e) {
-            return $this->json([
-                'error' => $e->getMessage()
-            ], Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-    #[Route('/{id}/profiles/names', name: 'admin_members_update_names', methods: ['PATCH'])]
-    public function updateNames(
-        string $id,
-        UpdateProfileNamesRequest $request,
-        UpdateMemberNamesHandler $handler
-    ): JsonResponse {
-        // Validate request
-        $errors = $request->validate();
-        if (!empty($errors)) {
-            return $this->json([
-                'error' => 'Validation failed',
-                'violations' => $errors
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $command = new UpdateMemberNamesCommand(
-                userId: $id,
-                name: $request->name
-            );
-
-            $handler($command);
-
-            return $this->json([
-                'message' => 'Member names updated successfully'
-            ]);
-        } catch (DomainException $e) {
-            return $this->json([
-                'error' => $e->getMessage()
-            ], Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-    #[Route('/{id}/profiles/surnames', name: 'admin_members_update_surnames', methods: ['PATCH'])]
-    public function updateSurnames(
-        string $id,
-        UpdateProfileSurnamesRequest $request,
-        UpdateMemberSurnamesHandler $handler
-    ): JsonResponse {
-        // Validate request
-        $errors = $request->validate();
-        if (!empty($errors)) {
-            return $this->json([
-                'error' => 'Validation failed',
-                'violations' => $errors
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $command = new UpdateMemberSurnamesCommand(
-                userId: $id,
-                surname: $request->surname
-            );
-
-            $handler($command);
-
-            return $this->json([
-                'message' => 'Member surnames updated successfully'
-            ]);
-        } catch (DomainException $e) {
-            return $this->json([
-                'error' => $e->getMessage()
-            ], Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-    #[Route('/{id}/profiles/password', name: 'admin_members_update_password', methods: ['PATCH'])]
-    public function updatePassword(
-        string $id,
-        UpdatePasswordRequest $request,
-        UpdateMemberPasswordHandler $handler
-    ): JsonResponse {
-        // Validate request
-        $errors = $request->validate();
-        if (!empty($errors)) {
-            return $this->json([
-                'error' => 'Validation failed',
-                'violations' => $errors
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $command = new UpdateMemberPasswordCommand(
-                userId: $id,
-                currentPassword: $request->current_password,
-                newPassword: $request->new_password
-            );
-
-            $handler($command);
-
-            return $this->json([
-                'message' => 'Member password updated successfully'
             ]);
         } catch (DomainException $e) {
             return $this->json([

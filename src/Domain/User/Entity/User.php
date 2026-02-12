@@ -13,80 +13,85 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'users')]
-#[ORM\Index(columns: ['email'], name: 'idx_user_email')]
-#[ORM\Index(columns: ['role'], name: 'idx_user_role')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
-    #[ORM\GeneratedValue(strategy: 'NONE')]
+    #[ORM\Column(type: 'uuid', unique: true)]
     private string $id;
 
-    #[ORM\Column(type: 'string', length: 50)]
-    private string $role;
-
-    #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[ORM\Column(type: 'string', unique: true)]
     private string $email;
 
     #[ORM\Column(type: 'string')]
     private string $password;
 
+    #[ORM\Column(type: 'string', enumType: UserRole::class)]
+    private UserRole $role;
+
+    #[ORM\Column(type: 'string', length: 64, nullable: true)]
+    private ?string $name = null;
+
+    #[ORM\Column(type: 'string', length: 64, nullable: true)]
+    private ?string $surname = null;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $phoneNumber = null;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $department = null;
+
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $birthDate = null;
+
+    #[ORM\Column(type: 'uuid')]
+    private string $createdBy;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $updatedAt;
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
 
-    #[ORM\Column(type: 'string', length: 36)]
-    private string $createdByUserId;
-
     private function __construct(
         Uuid $id,
-        UserRole $role,
         Email $email,
-        string $hashedPassword,
-        Uuid $createdByUserId
+        string $password,
+        UserRole $role,
+        Uuid $createdBy
     ) {
-        /** @disregard P1006 Expected type 'null|int'. Found 'string' */
         $this->id = (string)$id;
-        $this->role = $role->value;
         $this->email = (string)$email;
-        $this->password = $hashedPassword;
-        $this->createdByUserId = (string)$createdByUserId;
+        $this->password = $password;
+        $this->role = $role;
+        $this->createdBy = (string)$createdBy;
         $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public static function createAdmin(
         Uuid $id,
         Email $email,
-        string $hashedPassword,
-        Uuid $createdByUserId
+        string $password,
+        Uuid $createdBy
     ): self {
-        return new self($id, UserRole::ADMIN, $email, $hashedPassword, $createdByUserId);
+        return new self($id, $email, $password, UserRole::ADMIN, $createdBy);
     }
 
     public static function createMember(
         Uuid $id,
         Email $email,
-        string $hashedPassword,
-        Uuid $createdByUserId
+        string $password,
+        Uuid $createdBy
     ): self {
-        return new self($id, UserRole::MEMBER, $email, $hashedPassword, $createdByUserId);
+        return new self($id, $email, $password, UserRole::MEMBER, $createdBy);
     }
 
     // Getters
     public function getId(): Uuid
     {
         return Uuid::fromString($this->id);
-    }
-
-    public function getRole(): UserRole
-    {
-        return UserRole::from($this->role);
     }
 
     public function getEmail(): Email
@@ -99,12 +104,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
+    public function getRole(): UserRole
+    {
+        return $this->role;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function getSurname(): ?string
+    {
+        return $this->surname;
+    }
+
+    public function getPhoneNumber(): ?string
+    {
+        return $this->phoneNumber;
+    }
+
+    public function getDepartment(): ?string
+    {
+        return $this->department;
+    }
+
+    public function getBirthDate(): ?\DateTimeImmutable
+    {
+        return $this->birthDate;
+    }
+
+    public function getCreatedBy(): Uuid
+    {
+        return Uuid::fromString($this->createdBy);
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): \DateTimeImmutable
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
     }
@@ -114,22 +154,79 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->deletedAt;
     }
 
-    public function getCreatedByUserId(): Uuid
+    // Update methods
+    public function updateName(string $name): void
     {
-        return Uuid::fromString($this->createdByUserId);
+        $this->name = $name;
+        $this->markAsUpdated();
     }
 
-    // Business methods
-    public function changePassword(string $hashedPassword): void
+    public function updateSurname(string $surname): void
+    {
+        $this->surname = $surname;
+        $this->markAsUpdated();
+    }
+
+    public function updatePhoneNumber(?string $phoneNumber): void
+    {
+        $this->phoneNumber = $phoneNumber;
+        $this->markAsUpdated();
+    }
+
+    public function updateDepartment(?string $department): void
+    {
+        $this->department = $department;
+        $this->markAsUpdated();
+    }
+
+    public function updateBirthDate(?string $birthDate): void
+    {
+        if ($birthDate === null) {
+            $this->birthDate = null;
+        } else {
+            $this->birthDate = new \DateTimeImmutable($birthDate);
+        }
+        $this->markAsUpdated();
+    }
+
+    public function updatePassword(string $hashedPassword): void
     {
         $this->password = $hashedPassword;
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->markAsUpdated();
+    }
+
+    public function updateEmail(Email $email): void
+    {
+        $this->email = (string)$email;
+        $this->markAsUpdated();
     }
 
     public function softDelete(): void
     {
         $this->deletedAt = new \DateTimeImmutable();
+        $this->markAsUpdated();
+    }
+
+    public function restore(): void
+    {
+        $this->deletedAt = null;
+        $this->markAsUpdated();
+    }
+
+    private function markAsUpdated(): void
+    {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    // Role checks
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::ADMIN;
+    }
+
+    public function isMember(): bool
+    {
+        return $this->role === UserRole::MEMBER;
     }
 
     public function isDeleted(): bool
@@ -137,30 +234,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->deletedAt !== null;
     }
 
-    public function isAdmin(): bool
-    {
-        return $this->role === UserRole::ADMIN->value;
-    }
-
-    public function isMember(): bool
-    {
-        return $this->role === UserRole::MEMBER->value;
-    }
-
-    // UserInterface implementation
+    // Symfony UserInterface implementation
     public function getRoles(): array
     {
-        return [$this->role];
-    }
-
-    public function eraseCredentials(): void
-    {
-        // Intentionally empty - no sensitive temporary credentials to erase
-        // Actual credentials are stored in $password property
+        return [$this->role->value];
     }
 
     public function getUserIdentifier(): string
     {
         return $this->email;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Intentionally empty - no sensitive temporary credentials to erase
     }
 }

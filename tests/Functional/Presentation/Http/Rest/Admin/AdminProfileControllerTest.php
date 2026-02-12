@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Functional\Presentation\Http\Rest\Member;
+namespace App\Tests\Functional\Presentation\Http\Rest\Admin;
 
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-final class MemberProfileControllerTest extends WebTestCase
+final class AdminProfileControllerTest extends WebTestCase
 {
     private function getAuthToken(KernelBrowser $client): string
     {
-        $client->request('POST', '/api/v1/auth/login', [], [], [
+        $client->request('POST', '/api/v1/admin/auth/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
-            'email' => 'member@example.com',
+            'email' => 'admin@example.com',
             'password' => 'password123',
         ]));
 
@@ -23,7 +23,7 @@ final class MemberProfileControllerTest extends WebTestCase
 
         if (!$response->isSuccessful()) {
             $this->fail(sprintf(
-                'Member login failed with status %d: %s',
+                'Admin login failed with status %d: %s',
                 $response->getStatusCode(),
                 $response->getContent()
             ));
@@ -31,13 +31,13 @@ final class MemberProfileControllerTest extends WebTestCase
 
         $content = $response->getContent();
         if ($content === false) {
-            $this->fail('Member login response is empty');
+            $this->fail('Admin login response is empty');
         }
 
         $data = json_decode($content, true);
 
         if (!is_array($data) || !isset($data['token'])) {
-            $this->fail('No token in member login response. Response: ' . $content);
+            $this->fail('No token in admin login response. Response: ' . $content);
         }
 
         return $data['token'];
@@ -48,7 +48,7 @@ final class MemberProfileControllerTest extends WebTestCase
         $client = static::createClient();
         $token = $this->getAuthToken($client);
 
-        $client->request('GET', '/api/v1/profile', [], [], [
+        $client->request('GET', '/api/v1/admin/profile', [], [], [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
         ]);
 
@@ -61,6 +61,8 @@ final class MemberProfileControllerTest extends WebTestCase
         $this->assertIsArray($data);
         $this->assertArrayHasKey('userId', $data);
         $this->assertArrayHasKey('email', $data);
+        $this->assertArrayHasKey('name', $data);
+        $this->assertArrayHasKey('surname', $data);
     }
 
     public function testUpdateProfile(): void
@@ -68,7 +70,7 @@ final class MemberProfileControllerTest extends WebTestCase
         $client = static::createClient();
         $token = $this->getAuthToken($client);
 
-        $client->request('PATCH', '/api/v1/profile', [], [], [
+        $client->request('PATCH', '/api/v1/admin/profile', [], [], [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
@@ -92,7 +94,7 @@ final class MemberProfileControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('PATCH', '/api/v1/profile', [], [], [
+        $client->request('PATCH', '/api/v1/admin/profile', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
             'name' => 'UpdatedName',
