@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Shared\Exception;
 
-final class InvalidEmailException extends \InvalidArgumentException
+class InvalidEmailException extends ValidationException
 {
-    public function __construct(string $value)
+    public function __construct(string $email)
     {
-        parent::__construct(sprintf('The value "%s" is not a valid email address.', $value));
+        parent::__construct("The value '{$email}' is not a valid email address");
     }
 }

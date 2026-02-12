@@ -13,11 +13,13 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
+        # Specific firewall for test endpoints
         api_test:
             pattern: ^/api/v1/test
             stateless: true
-            security: false
+            security: false  # No authentication at firewall level
 
+        # Admin login endpoint (must appear before other json_login/firewalls)
         admin_login:
             pattern: ^/api/v1/admin/auth/login
             stateless: true
@@ -25,13 +27,16 @@ security:
                 check_path: /api/v1/admin/auth/login
                 username_path: email
                 password_path: password
-                success_handler: App\Infrastructure\Security\CustomAuthenticationSuccessHandler
+                success_handler: App\Infrastructure\Security\CustomAuthenticationSuccessHandler    #lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                #provider: app_admin_provider   # uncomment if using a separate provider
 
+        # Allow anonymous access to the admin refresh endpoint so the controller can handle expired tokens
         refresh_admin:
             pattern: ^/api/v1/admin/auth/refresh$
-            security: false
+            security: false     # disable security for this route — no JWT authenticator will run
 
+        # Member login endpoint
         login:
             pattern: ^/api/v1/auth/login
             stateless: true
@@ -39,25 +44,37 @@ security:
                 check_path: /api/v1/auth/login
                 username_path: email
                 password_path: password
-                success_handler: App\Infrastructure\Security\CustomAuthenticationSuccessHandler
+                success_handler: App\Infrastructure\Security\CustomAuthenticationSuccessHandler    #lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
+        # Allow anonymous access to the member refresh endpoint so the controller can handle expired tokens
         refresh_member:
             pattern: ^/api/v1/auth/refresh$
             security: false
 
+        # Main API firewall: JWT applied to all /api routes
         api:
             pattern: ^/api
             stateless: true
             provider: app_user_provider
             jwt: ~
+            # Handlers to produce concise JSON responses for security errors
             entry_point: App\Infrastructure\Security\JwtAuthenticationEntryPoint
             access_denied_handler: App\Infrastructure\Security\ApiAccessDeniedHandler
 
     access_control:
-        - { path: ^/api/v1/auth/(login|register)$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/v1/auth/(refresh|logout)$, roles: ROLE_MEMBER }
-        - { path: ^/api/v1/member, roles: ROLE_MEMBER }
-        - { path: ^/api/v1/admin/auth/login, roles: PUBLIC_ACCESS }
+        # Public routes
+        - { path: ^/api/v1/auth/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/admin/auth/login$, roles: PUBLIC_ACCESS }
+
+        # Authenticated routes (both roles)
+        - { path: ^/api/v1/auth/(refresh|logout|whoami)$, roles: IS_AUTHENTICATED_FULLY }
+
+        # Admin only
         - { path: ^/api/v1/admin, roles: ROLE_ADMIN }
+
+        # Member only
+        - { path: ^/api/v1/member, roles: ROLE_MEMBER }
+
+        # Default
         - { path: ^/api, roles: PUBLIC_ACCESS }

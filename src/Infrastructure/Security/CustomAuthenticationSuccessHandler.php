@@ -1,68 +1,66 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Security;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface;
 use App\Domain\Admin\Entity\AdminAccessLog;
+use App\Domain\Admin\Repository\AdminAccessLogRepositoryInterface;
 use App\Domain\Member\Entity\MemberAccessLog;
-use App\Domain\Member\Repository\MemberActivationCodeRepository;
+use App\Domain\Member\Repository\MemberAccessLogRepositoryInterface;
+use App\Domain\User\Entity\User;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface;
 
-class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandlerInterface
+final class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandlerInterface
 {
-    private JWTTokenManagerInterface $jwtManager;
-    private int $tokenTtl;
+    private int $jwtTtl = 3600;
 
     public function __construct(
-        private EntityManagerInterface $em,
-        private MemberActivationCodeRepository $activationRepo,
-        JWTTokenManagerInterface $jwtManager,
-        int $tokenTtl = 3600
-        )
-    {
-        $this->jwtManager = $jwtManager;
-        $this->tokenTtl = $tokenTtl;
-    }
+        private JWTTokenManagerInterface $jwtManager,
+        private AdminAccessLogRepositoryInterface $adminAccessLogRepo,
+        private MemberAccessLogRepositoryInterface $memberAccessLogRepo
+    ) {}
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token): JsonResponse
     {
+        /** @var User $user */
         $user = $token->getUser();
-        $jwt = $this->jwtManager->create($user);
 
-        /** @var \App\Domain\User\Entity\User $user */
-        $role = $user->getRole();
+        // Generate JWT
+        $jwtToken = $this->jwtManager->create($user);
+        $expiresAt = (new \DateTimeImmutable())->modify("+{$this->jwtTtl} seconds");
 
-        if ($role == 'ROLE_ADMIN') {
-            $accessLog = new AdminAccessLog();
+        // Log access
+        $ipAddress = $request->getClientIp();
+        $userAgent = $request->headers->get('User-Agent');
+
+        if ($user->isAdmin()) {
+            $accessLog = AdminAccessLog::create(
+                $user->getId(),
+                $jwtToken,
+                $expiresAt,
+                $ipAddress,
+                $userAgent
+            );
+            $this->adminAccessLogRepo->save($accessLog);
+        } else {
+            $accessLog = MemberAccessLog::create(
+                $user->getId(),
+                $jwtToken,
+                $expiresAt,
+                $ipAddress,
+                $userAgent
+            );
+            $this->memberAccessLogRepo->save($accessLog);
         }
-
-        if ($role == 'ROLE_MEMBER') {
-            $requiresActivation = (bool) ($_ENV['LOGIN_ACTIVATION_CODE'] ?? false);
-            $activation = $this->activationRepo->findOneBy(['user' => $user, 'is_active' => true]);
-            if ($requiresActivation && !$activation) {
-                return new JsonResponse(['message' => 'Access requires activation.'], JsonResponse::HTTP_UNAUTHORIZED);
-            }
-
-            $accessLog = new MemberAccessLog();
-        }
-
-        $accessLog->setUser($user);
-        $accessLog->setToken($jwt);
-        $accessLog->setExpiresAt((new \DateTime())->modify("+{$this->tokenTtl} minutes"));
-        $accessLog->setIpAddress($request->getClientIp());
-        $accessLog->setUserAgent($request->headers->get('User-Agent'));
-        $accessLog->setRequestsCount(1);
-        $accessLog->setPayload([]);
-        $this->em->persist($accessLog);
-        $this->em->flush();
 
         return new JsonResponse([
-            'token' => $jwt,
-            'expires_in' => $this->tokenTtl,
+            'token' => $jwtToken,
+            'expires_in' => $this->jwtTtl,
         ], JsonResponse::HTTP_ACCEPTED);
     }
 }

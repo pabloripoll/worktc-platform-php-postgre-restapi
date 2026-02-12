@@ -57,4 +57,31 @@ final class UserRepository implements UserRepositoryInterface
         $this->em->remove($user);
         $this->em->flush();
     }
+
+    public function findByRolePaginated(UserRole $role, int $limit, int $offset): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('u')
+            ->from(User::class, 'u')
+            ->where('u.role = :role')
+            ->andWhere('u.deletedAt IS NULL')
+            ->setParameter('role', $role->value)
+            ->orderBy('u.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countByRole(UserRole $role): int
+    {
+        return (int)$this->em->createQueryBuilder()
+            ->select('COUNT(u.id)')
+            ->from(User::class, 'u')
+            ->where('u.role = :role')
+            ->andWhere('u.deletedAt IS NULL')
+            ->setParameter('role', $role->value)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

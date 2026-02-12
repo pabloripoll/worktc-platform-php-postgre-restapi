@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Messaging\Message;
 
-use Symfony\Component\Messenger\Attribute\AsMessage;
-
-#[AsMessage(['async'])]
-class NotifyUserMessage
+final readonly class NotifyUserMessage
 {
     public function __construct(
-        public int $userId,
-        public string $text
+        public int|string $userId,
+        public string $message
     ) {}
 }

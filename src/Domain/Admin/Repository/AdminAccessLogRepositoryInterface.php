@@ -18,5 +18,20 @@ interface AdminAccessLogRepositoryInterface
      */
     public function findActiveByUserId(Uuid $userId): array;
 
+    /**
+     * @return AdminAccessLog[]
+     */
+    public function findByUserId(Uuid $userId): array;
+
+    /**
+     * @return AdminAccessLog[]
+     */
+    public function findAll(): array;
+
+    /**
+     * @return AdminAccessLog[]
+     */
+    public function findAllActive(): array;
+
     public function terminateAllByUserId(Uuid $userId): void;
 }

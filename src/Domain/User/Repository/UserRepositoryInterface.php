@@ -17,4 +17,11 @@ interface UserRepositoryInterface
     public function findByEmailAndRole(Email $email, UserRole $role): ?User;
     public function existsByEmail(Email $email): bool;
     public function delete(User $user): void;
+
+    /**
+     * @return User[]
+     */
+    public function findByRolePaginated(UserRole $role, int $limit, int $offset): array;
+
+    public function countByRole(UserRole $role): int;
 }

@@ -1,17 +1,11 @@
 # Domains Controllers
 
-main_controllers:
-    resource: ../../src/Controller/
+controllers:
+    resource:
+        path: ../../src/Presentation/Http/Rest/
+        namespace: App\Presentation\Http\Rest
     type: attribute
 
-admin_controllers:
-    resource: ../../src/Domain/Admin/Controller/
-    type: attribute
-
-member_controllers:
-    resource: ../../src/Domain/Member/Controller/
-    type: attribute
-
-post_controllers:
-    resource: ../../src/Domain/Member/Controller/
+kernel:
+    resource: App\Kernel
     type: attribute

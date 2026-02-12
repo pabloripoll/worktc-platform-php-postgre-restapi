@@ -18,5 +18,20 @@ interface MemberAccessLogRepositoryInterface
      */
     public function findActiveByUserId(Uuid $userId): array;
 
+    /**
+     * @return MemberAccessLog[]
+     */
+    public function findByUserId(Uuid $userId): array;
+
+    /**
+     * @return MemberAccessLog[]
+     */
+    public function findAll(): array;
+
+    /**
+     * @return MemberAccessLog[]
+     */
+    public function findAllActive(): array;
+
     public function terminateAllByUserId(Uuid $userId): void;
 }

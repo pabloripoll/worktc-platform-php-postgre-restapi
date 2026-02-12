@@ -37,17 +37,41 @@ final class AdminAccessLogRepository implements AdminAccessLogRepositoryInterfac
             'userId' => (string)$userId,
             'isTerminated' => false,
             'isExpired' => false,
-        ]);
+        ], ['createdAt' => 'DESC']);
+    }
+
+    public function findByUserId(Uuid $userId): array
+    {
+        return $this->em->getRepository(AdminAccessLog::class)->findBy(
+            ['userId' => (string)$userId],
+            ['createdAt' => 'DESC']
+        );
+    }
+
+    public function findAll(): array
+    {
+        return $this->em->getRepository(AdminAccessLog::class)->findBy(
+            [],
+            ['createdAt' => 'DESC']
+        );
+    }
+
+    public function findAllActive(): array
+    {
+        return $this->em->getRepository(AdminAccessLog::class)->findBy([
+            'isTerminated' => false,
+            'isExpired' => false,
+        ], ['createdAt' => 'DESC']);
     }
 
     public function terminateAllByUserId(Uuid $userId): void
     {
         $this->em->createQueryBuilder()
-            ->update(AdminAccessLog::class, 'a')
-            ->set('a.isTerminated', ':terminated')
-            ->set('a.updatedAt', ':now')
-            ->where('a.userId = :userId')
-            ->andWhere('a.isTerminated = :notTerminated')
+            ->update(AdminAccessLog::class, 'm')
+            ->set('m.isTerminated', ':terminated')
+            ->set('m.updatedAt', ':now')
+            ->where('m.userId = :userId')
+            ->andWhere('m.isTerminated = :notTerminated')
             ->setParameter('terminated', true)
             ->setParameter('notTerminated', false)
             ->setParameter('userId', (string)$userId)

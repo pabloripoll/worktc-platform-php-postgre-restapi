@@ -5,5 +5,4 @@ framework:
       async: '%env(MESSENGER_TRANSPORT_DSN)%'
 
     routing:
-      'App\Message\NotifyUserMessage': async
-      'App\Domain\Member\Message\UserRegisterMessage': async
+      App\Infrastructure\Messaging\Message\NotifyUserMessage: async

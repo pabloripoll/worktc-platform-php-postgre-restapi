@@ -19,38 +19,55 @@ services:
         exclude:
             - '../src/Domain/*/Entity/'
             - '../src/Domain/*/ValueObject/'
+            - '../src/Domain/*/Event/'
+            - '../src/Domain/*/DTO/'
+            - '../src/Domain/*/Service/'
+            - '../src/Application/*/DTO/'
+            - '../src/Infrastructure/Messaging/Message/'
             - '../src/Kernel.php'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Event\Subscriber\ApiExceptionSubscriber:
+    # Event Subscribers (correct namespace)
+    App\Infrastructure\Event\Subscriber\ApiExceptionSubscriber:
+        arguments:
+            $debug: '%kernel.debug%'
         tags: ['kernel.event_subscriber']
 
-    App\Security\JwtAuthenticationEntryPoint:
-        autowire: true
-        autoconfigure: false
+    App\Infrastructure\Event\Subscriber\DomainExceptionSubscriber:
+        tags: ['kernel.event_subscriber']
 
-    App\Security\ApiAccessDeniedHandler:
-        autowire: true
-        autoconfigure: false
-
-    App\Event\Listener\JWTCreatedListener:
+    App\Infrastructure\Event\Listener\JWTCreatedListener:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJwtCreated }
 
+    # Security Handlers
+    App\Infrastructure\Security\JwtAuthenticationEntryPoint:
+        autowire: true
+        autoconfigure: false
+
+    App\Infrastructure\Security\ApiAccessDeniedHandler:
+        autowire: true
+        autoconfigure: false
+
     # Redis Service
-    App\Service\RedisService:
+    App\Infrastructure\Service\RedisService:
         arguments:
             $redisDsn: '%env(REDIS_DSN)%'
 
     # MongoDB Service
-    App\Service\MongoDBService:
+    App\Infrastructure\Service\MongoDBService:
         arguments:
             $mongodbUrl: '%env(MONGODB_URL)%'
             $mongodbDatabase: '%env(MONGODB_DATABASE)%'
 
-    # Bind Domain Repository Interfaces to Infrastructure Implementations
+    # JWT TTL configuration
+    App\Application\User\Command\LoginHandler:
+        arguments:
+            $jwtTtl: '%env(int:JWT_TTL)%'
+
+    # Bind Domain Repository Interfaces to Infrastructure Implementations #
 
     # User Domain
     App\Domain\User\Repository\UserRepositoryInterface:
