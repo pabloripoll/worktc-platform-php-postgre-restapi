@@ -35,7 +35,7 @@ class UserFixtures extends Fixture
         $admin = User::createAdmin(
             $adminId,
             Email::fromString('admin@example.com'),
-            $this->hasher->hashPassword($tempAdmin, 'admin123'),
+            $this->hasher->hashPassword($tempAdmin, 'password123'),
             $adminId
         );
         $manager->persist($admin);
@@ -65,7 +65,7 @@ class UserFixtures extends Fixture
         $member = User::createMember(
             $memberId,
             Email::fromString('member@example.com'),
-            $this->hasher->hashPassword($tempMember, 'member123'),
+            $this->hasher->hashPassword($tempMember, 'password123'),
             $adminId
         );
         $manager->persist($member);

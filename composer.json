@@ -108,6 +108,7 @@
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.6",
         "doctrine/doctrine-fixtures-bundle": "^4.3",
         "fakerphp/faker": "^1.24",
         "jetbrains/phpstorm-stubs": "^2025.3",

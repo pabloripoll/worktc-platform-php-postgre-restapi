@@ -28,6 +28,7 @@ use App\Presentation\Request\Admin\UpdateProfileSurnamesRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -42,15 +43,24 @@ class AdminMembersController extends AbstractController
         #[CurrentUser] User $currentUser,
         RegisterMemberHandler $handler
     ): JsonResponse {
+        // Validate request
+        $errors = $request->validate();
+        if (!empty($errors)) {
+            return $this->json([
+                'error' => 'Validation failed',
+                'violations' => $errors
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $command = new RegisterMemberCommand(
                 email: $request->email,
                 password: $request->password,
                 name: $request->name,
                 surname: $request->surname,
-                phoneNumber: $request->phoneNumber,
-                department: $request->department,
-                birthDate: $request->birthDate,
+                phoneNumber: $request->phone_number ?? null,
+                department: $request->department ?? null,
+                birthDate: $request->birth_date ?? null,
                 createdByUserId: (string)$currentUser->getId()
             );
 
@@ -59,9 +69,11 @@ class AdminMembersController extends AbstractController
             return $this->json([
                 'user_id' => (string)$userId,
                 'message' => 'Member created successfully'
-            ], JsonResponse::HTTP_CREATED);
+            ], Response::HTTP_CREATED);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -78,7 +90,9 @@ class AdminMembersController extends AbstractController
 
             return $this->json($result->toArray());
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -93,7 +107,9 @@ class AdminMembersController extends AbstractController
 
             return $this->json($user);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND);
         }
     }
 
@@ -107,19 +123,27 @@ class AdminMembersController extends AbstractController
             $user = $userRepository->findById($userId);
 
             if (!$user) {
-                return $this->json(['error' => 'User not found'], JsonResponse::HTTP_NOT_FOUND);
+                return $this->json([
+                    'error' => 'User not found'
+                ], Response::HTTP_NOT_FOUND);
             }
 
             if (!$user->isMember()) {
-                return $this->json(['error' => 'User is not a member'], JsonResponse::HTTP_BAD_REQUEST);
+                return $this->json([
+                    'error' => 'User is not a member'
+                ], Response::HTTP_BAD_REQUEST);
             }
 
             $user->softDelete();
             $userRepository->save($user);
 
-            return $this->json(['message' => 'Member profile deleted successfully']);
+            return $this->json([
+                'message' => 'Member profile deleted successfully'
+            ]);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -129,6 +153,15 @@ class AdminMembersController extends AbstractController
         UpdateProfileNamesRequest $request,
         UpdateMemberNamesHandler $handler
     ): JsonResponse {
+        // Validate request
+        $errors = $request->validate();
+        if (!empty($errors)) {
+            return $this->json([
+                'error' => 'Validation failed',
+                'violations' => $errors
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $command = new UpdateMemberNamesCommand(
                 userId: $id,
@@ -137,9 +170,13 @@ class AdminMembersController extends AbstractController
 
             $handler($command);
 
-            return $this->json(['message' => 'Member names updated successfully']);
+            return $this->json([
+                'message' => 'Member names updated successfully'
+            ]);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -149,6 +186,15 @@ class AdminMembersController extends AbstractController
         UpdateProfileSurnamesRequest $request,
         UpdateMemberSurnamesHandler $handler
     ): JsonResponse {
+        // Validate request
+        $errors = $request->validate();
+        if (!empty($errors)) {
+            return $this->json([
+                'error' => 'Validation failed',
+                'violations' => $errors
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $command = new UpdateMemberSurnamesCommand(
                 userId: $id,
@@ -157,9 +203,13 @@ class AdminMembersController extends AbstractController
 
             $handler($command);
 
-            return $this->json(['message' => 'Member surnames updated successfully']);
+            return $this->json([
+                'message' => 'Member surnames updated successfully'
+            ]);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -169,18 +219,31 @@ class AdminMembersController extends AbstractController
         UpdatePasswordRequest $request,
         UpdateMemberPasswordHandler $handler
     ): JsonResponse {
+        // Validate request
+        $errors = $request->validate();
+        if (!empty($errors)) {
+            return $this->json([
+                'error' => 'Validation failed',
+                'violations' => $errors
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $command = new UpdateMemberPasswordCommand(
                 userId: $id,
-                currentPassword: $request->currentPassword,
-                newPassword: $request->newPassword
+                currentPassword: $request->current_password,
+                newPassword: $request->new_password
             );
 
             $handler($command);
 
-            return $this->json(['message' => 'Member password updated successfully']);
+            return $this->json([
+                'message' => 'Member password updated successfully'
+            ]);
         } catch (DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 }

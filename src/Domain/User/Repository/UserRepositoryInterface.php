@@ -12,16 +12,26 @@ use App\Domain\User\ValueObject\UserRole;
 interface UserRepositoryInterface
 {
     public function save(User $user): void;
+
     public function findById(Uuid $id): ?User;
+
     public function findByEmail(Email $email): ?User;
+
     public function findByEmailAndRole(Email $email, UserRole $role): ?User;
+
     public function existsByEmail(Email $email): bool;
-    public function delete(User $user): void;
 
     /**
-     * @return User[]
+     * Find users by role with pagination
+     *
+     * @param UserRole $role The role to filter by
+     * @param int $page Page number (1-indexed)
+     * @param int $limit Number of items per page
+     * @return array{data: User[], total: int, page: int, limit: int}
      */
-    public function findByRolePaginated(UserRole $role, int $limit, int $offset): array;
+    public function findByRolePaginated(UserRole $role, int $page, int $limit): array;
 
     public function countByRole(UserRole $role): int;
+
+    public function delete(User $user): void;
 }

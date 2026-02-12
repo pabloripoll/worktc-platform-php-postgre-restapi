@@ -26,6 +26,9 @@ services:
             - '../src/Infrastructure/Messaging/Message/'
             - '../src/Kernel.php'
 
+    # Make sure RequestStack is available (should be automatic)
+    Symfony\Component\HttpFoundation\RequestStack: ~
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

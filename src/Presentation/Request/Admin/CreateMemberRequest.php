@@ -25,11 +25,7 @@ final class CreateMemberRequest extends BaseRequest
     #[Assert\Length(min: 2, max: 64)]
     public string $surname;
 
-    #[Assert\Length(max: 32)]
-    public ?string $phoneNumber = null;
-
-    #[Assert\Length(max: 64)]
+    public ?string $birth_date = null;
+    public ?string $phone_number = null;
     public ?string $department = null;
-
-    public ?string $birthDate = null;
 }

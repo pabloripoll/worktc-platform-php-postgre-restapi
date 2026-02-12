@@ -58,9 +58,21 @@ final class UserRepository implements UserRepositoryInterface
         $this->em->flush();
     }
 
-    public function findByRolePaginated(UserRole $role, int $limit, int $offset): array
+    /**
+     * Find users by role with pagination
+     *
+     * @param UserRole $role The role to filter by
+     * @param int $page Page number (1-indexed)
+     * @param int $limit Number of items per page
+     * @return array{data: User[], total: int, page: int, limit: int}
+     */
+    public function findByRolePaginated(UserRole $role, int $page, int $limit): array
     {
-        return $this->em->createQueryBuilder()
+        // Calculate offset from page number
+        $offset = ($page - 1) * $limit;
+
+        // Get paginated users
+        $users = $this->em->createQueryBuilder()
             ->select('u')
             ->from(User::class, 'u')
             ->where('u.role = :role')
@@ -71,6 +83,16 @@ final class UserRepository implements UserRepositoryInterface
             ->setFirstResult($offset)
             ->getQuery()
             ->getResult();
+
+        // Get total count
+        $total = $this->countByRole($role);
+
+        return [
+            'data' => $users,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+        ];
     }
 
     public function countByRole(UserRole $role): int

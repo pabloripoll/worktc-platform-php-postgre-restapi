@@ -155,7 +155,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // No temporary credentials to erase
+        // Intentionally empty - no sensitive temporary credentials to erase
+        // Actual credentials are stored in $password property
     }
 
     public function getUserIdentifier(): string
